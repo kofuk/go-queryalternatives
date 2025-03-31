@@ -1,4 +1,4 @@
-module github.com/kofuk/go-query-alternatives
+module github.com/kofuk/go-queryalternatives
 
 go 1.24.1
 

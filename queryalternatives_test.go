@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	queryalternatives "github.com/kofuk/go-query-alternatives"
+	"github.com/kofuk/go-queryalternatives"
 	"github.com/stretchr/testify/assert"
 )
 
