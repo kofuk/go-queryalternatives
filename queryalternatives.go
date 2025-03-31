@@ -71,10 +71,9 @@ func newAlternatives() *Alternatives {
 	}
 }
 
+// Parse parses the input from the reader and returns an Alternatives object.
 func Parse(reader *bufio.Reader) (*Alternatives, error) {
-	result := newAlternatives()
-
-	return result, nil
+	return NewReader(reader).Read()
 }
 
 type Reader struct {
