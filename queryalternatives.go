@@ -71,24 +71,25 @@ func newAlternatives() *Alternatives {
 	}
 }
 
-// Parse parses the input from the reader and returns an Alternatives object.
-func Parse(reader *bufio.Reader) (*Alternatives, error) {
-	return NewReader(reader).Read()
-}
-
-type Reader struct {
+type Parser struct {
 	R      *bufio.Reader
 	lineNo int
 }
 
-func NewReader(r *bufio.Reader) *Reader {
-	return &Reader{
-		R:      r,
+func NewParser(r io.Reader) *Parser {
+	if br, ok := r.(*bufio.Reader); ok {
+		return &Parser{
+			R:      br,
+			lineNo: 0,
+		}
+	}
+	return &Parser{
+		R:      bufio.NewReader(r),
 		lineNo: 0,
 	}
 }
 
-func (r *Reader) readKeyValue() (string, string, error) {
+func (r *Parser) readKeyValue() (string, string, error) {
 	var line []byte
 	var err error
 	for {
@@ -156,7 +157,7 @@ func (r *Reader) readKeyValue() (string, string, error) {
 	return key, value.String(), nil
 }
 
-func (r *Reader) parseSlaves(input string) (map[string]string, error) {
+func (r *Parser) parseSlaves(input string) (map[string]string, error) {
 	slaves := make(map[string]string)
 	lines := strings.Split(input, "\n")
 	for _, line := range lines {
@@ -172,7 +173,7 @@ func (r *Reader) parseSlaves(input string) (map[string]string, error) {
 	return slaves, nil
 }
 
-func (r *Reader) Read() (*Alternatives, error) {
+func (r *Parser) Parse() (*Alternatives, error) {
 	result := newAlternatives()
 	var currentAlt *Alternative
 
@@ -254,7 +255,7 @@ func (r *Reader) Read() (*Alternatives, error) {
 
 // ParseString parses a string and returns an Alternatives object.
 func ParseString(input string) (*Alternatives, error) {
-	return Parse(bufio.NewReader(strings.NewReader(input)))
+	return NewParser(strings.NewReader(input)).Parse()
 }
 
 type QueryError struct {
@@ -266,6 +267,7 @@ func (e *QueryError) Error() string {
 	return "error querying alternatives: " + e.Message
 }
 
+// Query executes the `update-alternatives --query` command and returns the parsed result.
 func Query(ctx context.Context, query string) (*Alternatives, error) {
 	cmd := exec.CommandContext(ctx, "update-alternatives", "--query", query)
 	stdout, err := cmd.StdoutPipe()
@@ -278,7 +280,7 @@ func Query(ctx context.Context, query string) (*Alternatives, error) {
 		return nil, err
 	}
 
-	result, err := NewReader(bufio.NewReader(stdout)).Read()
+	result, err := NewParser(stdout).Parse()
 
 	if err := cmd.Wait(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {

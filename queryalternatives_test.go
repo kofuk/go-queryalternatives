@@ -115,8 +115,8 @@ Value: /usr/lib/jvm/java-21-openjdk-amd64/bin/java`,
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			reader := queryalternatives.NewReader(bufio.NewReader(strings.NewReader(test.input)))
-			result, err := reader.Read()
+			reader := queryalternatives.NewParser(bufio.NewReader(strings.NewReader(test.input)))
+			result, err := reader.Parse()
 			assert.NoError(t, err)
 			assert.Equal(t, test.expected, result)
 		})
@@ -127,8 +127,8 @@ func Test_ParseString_Error(t *testing.T) {
 	t.Parallel()
 
 	input := `update-alternatives: error: no alternatives for java`
-	reader := queryalternatives.NewReader(bufio.NewReader(strings.NewReader(input)))
-	result, err := reader.Read()
+	reader := queryalternatives.NewParser(bufio.NewReader(strings.NewReader(input)))
+	result, err := reader.Parse()
 	assert.Error(t, err, "expected an error")
 	assert.Nil(t, result)
 }
